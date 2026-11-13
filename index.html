@@ -329,10 +329,21 @@ function buildPiano(container, onPress) {
     const el = document.createElement("div");
     el.className = "black-key";
     el.dataset.note = n.id;
-    const rect = anchor.getBoundingClientRect();
-    el.style.left = (anchor.offsetLeft + anchor.offsetWidth - container.offsetWidth * 0.031) + "px";
+    el.dataset.anchor = n.black;
     el.addEventListener("pointerdown", e => { e.stopPropagation(); onPress(n.id, el); });
     container.appendChild(el);
+  });
+  layoutBlackKeys(container);
+}
+
+function layoutBlackKeys(container) {
+  if (container.offsetWidth === 0) return;
+  const bw = container.offsetWidth * 0.062;
+  container.querySelectorAll(".black-key").forEach(el => {
+    const anchor = container.querySelector(".white-key[data-note='" + el.dataset.anchor + "']");
+    if (!anchor) return;
+    const boundary = anchor.offsetLeft + anchor.offsetWidth + 1.5;
+    el.style.left = (boundary - bw / 2) + "px";
   });
 }
 
@@ -340,6 +351,7 @@ const screens = document.querySelectorAll(".screen");
 function show(name) {
   screens.forEach(s => s.classList.remove("active"));
   document.getElementById("screen-" + name).classList.add("active");
+  document.querySelectorAll(".piano").forEach(layoutBlackKeys);
   if (name === "find") newFindRound();
   if (name === "reverse") newReverseRound();
 }
@@ -460,6 +472,9 @@ buildPiano(document.getElementById("piano-rev"), id => {
   const n = byId[id];
   playNote(n.freq);
 });
+
+window.addEventListener("resize", () =>
+  document.querySelectorAll(".piano").forEach(layoutBlackKeys));
 
 window.addEventListener("keydown", e => {
   const map = { a: "C4", s: "D4", d: "E4", f: "F4", g: "G4", h: "A4", j: "B4", k: "C5", l: "D5" };
