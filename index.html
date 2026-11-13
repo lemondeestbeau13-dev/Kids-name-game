@@ -432,6 +432,7 @@ let revTarget = null, revCount = 0, revLocked = false;
 function newReverseRound() {
   revCount++;
   document.getElementById("rev-round").textContent = `Задание ${revCount} из 10`;
+  document.querySelectorAll("#piano-rev .glow").forEach(k => k.classList.remove("glow"));
   revTarget = WHITE[Math.floor(Math.random() * WHITE.length)];
   const others = WHITE.filter(n => n.id !== revTarget.id && Math.abs(n.y - revTarget.y) > 20);
   const wrong = [];
