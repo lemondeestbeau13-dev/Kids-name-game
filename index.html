@@ -254,7 +254,7 @@ function drawStaff(svg, { note = null, highlight = false, small = false } = {}) 
   const lineColor = "#5d4037";
   const stroke = small ? 2 : 3;
   for (let i = 0; i < 5; i++) {
-    const y = i * 20;
+    const y = (i + 1) * 20;
     const line = document.createElementNS(SVGNS, "line");
     line.setAttribute("x1", 10); line.setAttribute("x2", w - 10);
     line.setAttribute("y1", y);  line.setAttribute("y2", y);
@@ -265,7 +265,7 @@ function drawStaff(svg, { note = null, highlight = false, small = false } = {}) 
   const clef = document.createElementNS(SVGNS, "text");
   clef.textContent = "𝄞";
   clef.setAttribute("x", 22);
-  clef.setAttribute("y", 78);
+  clef.setAttribute("y", 98);
   clef.setAttribute("font-size", 100);
   clef.setAttribute("fill", lineColor);
   svg.appendChild(clef);
