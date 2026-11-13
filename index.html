@@ -448,8 +448,8 @@ function newReverseRound() {
     const btn = document.createElement("button");
     btn.className = "answer";
     const svg = document.createElementNS(SVGNS, "svg");
-    svg.setAttribute("width", 170); svg.setAttribute("height", 150);
-    svg.setAttribute("viewBox", "-60 -45 290 150");
+    svg.setAttribute("width", 170); svg.setAttribute("height", 180);
+    svg.setAttribute("viewBox", "-60 -40 290 180");
     drawStaff(svg, { note: opt, small: true });
     btn.appendChild(svg);
     btn.addEventListener("click", () => {
