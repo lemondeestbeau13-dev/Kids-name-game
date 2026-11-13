@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Волшебные нотки — учим ноты первой и второй октавы</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(180deg, #7ec8f7 0%, #b3e5fc 45%, #d3f5d3 100%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .cloud { position: absolute; background: #fff; border-radius: 50px; opacity: .85; animation: drift 60s linear infinite; }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+  .cloud::before { width: 60%; height: 160%; left: 12%; top: -70%; }
+  .cloud::after { width: 45%; height: 120%; right: 12%; top: -45%; }
+  @keyframes drift { from { transform: translateX(-20vw); } to { transform: translateX(120vw); } }
+
+  header {
+    z-index: 2;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+  }
+  h1 {
+    font-size: clamp(20px, 4vw, 34px);
+    color: #ff6f91;
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(0,0,0,.08);
+  }
+  .stars {
+    background: #fff; border-radius: 30px; padding: 6px 18px;
+    font-size: clamp(18px, 3vw, 26px); color: #f5a623;
+    box-shadow: 0 3px 0 rgba(0,0,0,.12);
+  }
+
+  .screen { display: none; flex: 1; flex-direction: column; align-items: center; z-index: 1; min-height: 0; }
+  .screen.active { display: flex; }
+
+  .menu-buttons { display: flex; flex-direction: column; gap: 18px; margin-top: 4vh; width: min(520px, 88vw); }
+  .big-btn {
+    font-family: inherit; font-size: clamp(22px, 4vw, 32px); font-weight: bold;
+    padding: 20px 24px; border: none; border-radius: 24px; cursor: pointer;
+    color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.18);
+    transition: transform .08s;
+  }
+  .big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+  .btn-pink  { background: #ff6f91; }
+  .btn-orange{ background: #ffa726; }
+  .btn-green { background: #66bb6a; }
+  .btn-blue  { background: #42a5f5; }
+
+  .top-bar { display: flex; gap: 12px; width: 100%; justify-content: center; padding: 6px; flex-wrap: wrap; }
+  .pill {
+    background: #fff; border: none; border-radius: 30px; cursor: pointer;
+    font-family: inherit; font-size: clamp(15px, 2.5vw, 20px); font-weight: bold;
+    padding: 8px 20px; color: #555; box-shadow: 0 3px 0 rgba(0,0,0,.12);
+  }
+  .pill.selected { background: #ff6f91; color: #fff; }
+
+  .staff-wrap {
+    background: #fffdf5; border-radius: 20px; padding: 10px 18px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.1);
+    flex: 0 0 auto; margin: 4px 10px;
+  }
+  svg { display: block; }
+
+  .hint {
+    font-size: clamp(18px, 3vw, 26px); font-weight: bold; color: #33691e;
+    background: rgba(255,255,255,.85); border-radius: 20px; padding: 8px 22px;
+    margin: 4px 10px; text-align: center;
+  }
+  .task-note-name { font-size: clamp(26px, 5vw, 40px); color: #ff6f91; }
+
+  .feedback {
+    position: fixed; left: 50%; top: 30%; transform: translate(-50%,-50%) scale(0);
+    font-size: clamp(40px, 10vw, 90px); font-weight: bold; z-index: 50; pointer-events: none;
+    text-shadow: 3px 3px 0 #fff;
+  }
+  .feedback.show { animation: pop 1s ease forwards; }
+  @keyframes pop {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+    40% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; }
+    70% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1.4); opacity: 0; }
+  }
+
+  .confetti { position: fixed; width: 14px; height: 14px; z-index: 49; pointer-events: none; border-radius: 3px; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .2; } }
+
+  .piano {
+    position: relative; width: min(96vw, 980px); height: clamp(140px, 26vh, 220px);
+    margin: auto auto 12px; flex: 0 0 auto;
+    background: #5d4037; border-radius: 12px; padding: 8px;
+    box-shadow: 0 8px 0 rgba(0,0,0,.25);
+    display: flex; gap: 3px;
+  }
+  .white-key {
+    flex: 1; background: linear-gradient(#fff, #f1f1f1); border-radius: 0 0 8px 8px;
+    position: relative; cursor: pointer; display: flex; align-items: flex-end; justify-content: center;
+    box-shadow: inset 0 -6px 0 rgba(0,0,0,.08);
+  }
+  .white-key .label { font-size: clamp(13px, 2.4vw, 20px); font-weight: bold; color: #777; margin-bottom: 8px; }
+  .white-key .oct { font-size: clamp(9px, 1.6vw, 13px); color: #bbb; margin-bottom: 3px; position: absolute; bottom: 0; }
+  .white-key.pressed { background: linear-gradient(#ffe082, #ffd54f); }
+  .white-key.glow { animation: glowW 0.9s ease infinite alternate; }
+  @keyframes glowW { from { box-shadow: inset 0 -6px 0 rgba(0,0,0,.08); } to { background: #ffd54f; box-shadow: 0 0 24px 8px #ffd54f; } }
+
+  .black-key {
+    position: absolute; top: 8px; width: 6.2%; height: 60%;
+    background: linear-gradient(#444, #111); border-radius: 0 0 6px 6px;
+    cursor: pointer; z-index: 3; box-shadow: 0 4px 0 rgba(0,0,0,.4);
+  }
+  .black-key.pressed { background: linear-gradient(#333, #000); transform: translateY(2px); }
+  .black-key.glow { animation: glowB 0.9s ease infinite alternate; }
+  @keyframes glowB { to { box-shadow: 0 0 20px 6px #ff8a65; } }
+
+  .answers { display: flex; gap: 14px; margin: 4px 10px 8px; flex-wrap: wrap; justify-content: center; }
+  .answer {
+    background: #fffdf5; border: 4px solid #ddd; border-radius: 16px; cursor: pointer;
+    padding: 6px 12px; box-shadow: 0 4px 0 rgba(0,0,0,.1); transition: border-color .15s;
+  }
+  .answer:hover { border-color: #ffa726; }
+  .answer.correct { border-color: #66bb6a; background: #e8f5e9; }
+  .answer.wrong { border-color: #ef5350; background: #ffebee; }
+</style>
+</head>
+<body>
+<div class="clouds">
+  <div class="cloud" style="width:120px;height:40px;top:8%;animation-duration:70s;"></div>
+  <div class="cloud" style="width:90px;height:30px;top:22%;animation-duration:95s;animation-delay:-30s;"></div>
+  <div class="cloud" style="width:150px;height:50px;top:40%;animation-duration:120s;animation-delay:-60s;"></div>
+</div>
+
+<header>
+  <h1>🎹 Волшебные нотки</h1>
+  <div class="stars">⭐ <span id="starCount">0</span></div>
+</header>
+
+<div class="screen active" id="screen-menu">
+  <div class="menu-buttons">
+    <button class="big-btn btn-green"  data-go="learn">🎵 Учимся играть</button>
+    <button class="big-btn btn-pink"   data-go="find">🔍 Найди ноту на клавишах</button>
+    <button class="big-btn btn-orange" data-go="reverse">🎼 Угадай ноту на стане</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-learn">
+  <div class="top-bar">
+    <button class="pill" data-go="menu">🏠 Меню</button>
+    <div class="hint">Нажимай на клавиши и слушай, как поют нотки!</div>
+  </div>
+  <div class="staff-wrap"><svg id="staff-learn" width="420" height="200" viewBox="-60 -55 420 200"></svg></div>
+  <div class="piano" id="piano-learn"></div>
+</div>
+
+<div class="screen" id="screen-find">
+  <div class="top-bar">
+    <button class="pill" data-go="menu">🏠 Меню</button>
+    <div class="pill" id="find-round">Задание 1 из 10</div>
+  </div>
+  <div class="hint">Какая это нота? Нажми нужную клавишу!</div>
+  <div class="staff-wrap"><svg id="staff-find" width="420" height="200" viewBox="-60 -55 420 200"></svg></div>
+  <div class="piano" id="piano-find"></div>
+</div>
+
+<div class="screen" id="screen-reverse">
+  <div class="top-bar">
+    <button class="pill" data-go="menu">🏠 Меню</button>
+    <div class="pill" id="rev-round">Задание 1 из 10</div>
+  </div>
+  <div class="hint">Нажми подсвеченную клавишу и найди её ноту!</div>
+  <div class="staff-wrap"><svg id="staff-rev" width="420" height="200" viewBox="-60 -55 420 200"></svg></div>
+  <div class="answers" id="rev-answers"></div>
+  <div class="piano" id="piano-rev"></div>
+</div>
+
+<div class="feedback" id="feedback"></div>
+
+<script>
+const NOTES = [
+  { id: "C4",  name: "До",   octave: 1, freq: 261.63, y: 120, ledger: true,  black: null  },
+  { id: "C#4", name: "До♯",  octave: 1, freq: 277.18, y: null, ledger: false, black: "C4"  },
+  { id: "D4",  name: "Ре",   octave: 1, freq: 293.66, y: 110, ledger: false, black: null  },
+  { id: "D#4", name: "Ре♯",  octave: 1, freq: 311.13, y: null, ledger: false, black: "D4"  },
+  { id: "E4",  name: "Ми",   octave: 1, freq: 329.63, y: 100, ledger: false, black: null  },
+  { id: "F4",  name: "Фа",   octave: 1, freq: 349.23, y: 90,  ledger: false, black: null  },
+  { id: "F#4", name: "Фа♯",  octave: 1, freq: 369.99, y: null, ledger: false, black: "F4"  },
+  { id: "G4",  name: "Соль", octave: 1, freq: 392.00, y: 80,  ledger: false, black: null  },
+  { id: "G#4", name: "Соль♯", octave: 1, freq: 415.30, y: null, ledger: false, black: "G4"  },
+  { id: "A4",  name: "Ля",   octave: 1, freq: 440.00, y: 70,  ledger: false, black: null  },
+  { id: "A#4", name: "Ля♯",  octave: 1, freq: 466.16, y: null, ledger: false, black: "A4"  },
+  { id: "B4",  name: "Си",   octave: 1, freq: 493.88, y: 60,  ledger: false, black: null  },
+  { id: "C5",  name: "До",   octave: 2, freq: 523.25, y: 50,  ledger: false, black: null  },
+  { id: "C#5", name: "До♯",  octave: 2, freq: 554.37, y: null, ledger: false, black: "C5"  },
+  { id: "D5",  name: "Ре",   octave: 2, freq: 587.33, y: 40,  ledger: false, black: null  },
+  { id: "D#5", name: "Ре♯",  octave: 2, freq: 622.25, y: null, ledger: false, black: "D5"  },
+  { id: "E5",  name: "Ми",   octave: 2, freq: 659.25, y: 30,  ledger: false, black: null  },
+  { id: "F5",  name: "Фа",   octave: 2, freq: 698.46, y: 20,  ledger: false, black: null  },
+  { id: "F#5", name: "Фа♯",  octave: 2, freq: 739.99, y: null, ledger: false, black: "F5"  },
+  { id: "G5",  name: "Соль", octave: 2, freq: 783.99, y: 10,  ledger: false, black: null  },
+  { id: "G#5", name: "Соль♯", octave: 2, freq: 830.61, y: null, ledger: false, black: "G5"  },
+  { id: "A5",  name: "Ля",   octave: 2, freq: 880.00, y: 0,   ledger: true,  black: null  },
+  { id: "A#5", name: "Ля♯",  octave: 2, freq: 932.33, y: null, ledger: false, black: "A5"  },
+  { id: "B5",  name: "Си",   octave: 2, freq: 987.77, y: -10, ledger: true,  black: null  },
+];
+const WHITE = NOTES.filter(n => !n.black);
+const byId = Object.fromEntries(NOTES.map(n => [n.id, n]));
+const SVGNS = "http://www.w3.org/2000/svg";
+
+let stars = +(localStorage.getItem("stars") || 0);
+document.getElementById("starCount").textContent = stars;
+function addStars(n) {
+  stars += n;
+  localStorage.setItem("stars", stars);
+  document.getElementById("starCount").textContent = stars;
+}
+
+let audioCtx = null;
+function playNote(freq, dur = 1.2) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  const t = audioCtx.currentTime;
+  [[1, "triangle", 0.5], [2, "sine", 0.15], [3, "sine", 0.06]].forEach(([mult, type, vol]) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq * mult;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.1);
+  });
+}
+function playCorrect() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => playNote(f, 0.5), i * 110)); }
+function playWrong() { playNote(220, 0.4); setTimeout(() => playNote(196, 0.5), 160); }
+
+function drawStaff(svg, { note = null, highlight = false, small = false } = {}) {
+  svg.innerHTML = "";
+  const w = +svg.getAttribute("width");
+  const lineColor = "#5d4037";
+  const stroke = small ? 2 : 3;
+  for (let i = 0; i < 5; i++) {
+    const y = i * 20;
+    const line = document.createElementNS(SVGNS, "line");
+    line.setAttribute("x1", 10); line.setAttribute("x2", w - 10);
+    line.setAttribute("y1", y);  line.setAttribute("y2", y);
+    line.setAttribute("stroke", lineColor);
+    line.setAttribute("stroke-width", stroke);
+    svg.appendChild(line);
+  }
+  const clef = document.createElementNS(SVGNS, "text");
+  clef.textContent = "𝄞";
+  clef.setAttribute("x", 22);
+  clef.setAttribute("y", 78);
+  clef.setAttribute("font-size", 100);
+  clef.setAttribute("fill", lineColor);
+  svg.appendChild(clef);
+  if (note && note.y !== null) {
+    if (note.ledger) {
+      const led = document.createElementNS(SVGNS, "line");
+      const ly = note.id === "C4" ? 120 : 0;
+      led.setAttribute("x1", 150); led.setAttribute("x2", 210);
+      led.setAttribute("y1", ly);  led.setAttribute("y2", ly);
+      led.setAttribute("stroke", lineColor);
+      led.setAttribute("stroke-width", stroke);
+      svg.appendChild(led);
+    }
+    const cx = 180, cy = note.y;
+    if (highlight) {
+      const halo = document.createElementNS(SVGNS, "circle");
+      halo.setAttribute("cx", cx); halo.setAttribute("cy", cy);
+      halo.setAttribute("r", 26);
+      halo.setAttribute("fill", "none");
+      halo.setAttribute("stroke", "#ffa726");
+      halo.setAttribute("stroke-width", 5);
+      svg.appendChild(halo);
+    }
+    const head = document.createElementNS(SVGNS, "ellipse");
+    head.setAttribute("cx", cx); head.setAttribute("cy", cy);
+    head.setAttribute("rx", 13); head.setAttribute("ry", 9.5);
+    head.setAttribute("fill", note.black ? "#546e7a" : "#ff6f91");
+    head.setAttribute("stroke", "#5d4037");
+    head.setAttribute("stroke-width", 3);
+    head.setAttribute("transform", `rotate(-20 ${cx} ${cy})`);
+    svg.appendChild(head);
+    const stem = document.createElementNS(SVGNS, "line");
+    const stemUp = cy > 60;
+    stem.setAttribute("x1", cx + (stemUp ? 12 : -12));
+    stem.setAttribute("x2", cx + (stemUp ? 12 : -12));
+    stem.setAttribute("y1", cy);
+    stem.setAttribute("y2", stemUp ? cy - 62 : cy + 62);
+    stem.setAttribute("stroke", "#5d4037");
+    stem.setAttribute("stroke-width", 3.5);
+    svg.appendChild(stem);
+    if (small) {
+      const t = document.createElementNS(SVGNS, "text");
+      t.textContent = note.name;
+      t.setAttribute("x", 130);
+      t.setAttribute("y", cy + 6);
+      t.setAttribute("font-size", 22);
+      t.setAttribute("font-weight", "bold");
+      t.setAttribute("fill", "#555");
+      svg.appendChild(t);
+    }
+  }
+}
+
+function buildPiano(container, onPress) {
+  container.innerHTML = "";
+  const whiteKeys = [];
+  WHITE.forEach(n => {
+    const el = document.createElement("div");
+    el.className = "white-key";
+    el.dataset.note = n.id;
+    el.innerHTML = `<span class="label">${n.name}</span><span class="oct">${n.octave}-я окт.</span>`;
+    el.addEventListener("pointerdown", () => onPress(n.id, el));
+    container.appendChild(el);
+    whiteKeys.push(el);
+  });
+  NOTES.filter(n => n.black).forEach(n => {
+    const anchor = whiteKeys.find(k => k.dataset.note === n.black);
+    if (!anchor) return;
+    const el = document.createElement("div");
+    el.className = "black-key";
+    el.dataset.note = n.id;
+    const rect = anchor.getBoundingClientRect();
+    el.style.left = (anchor.offsetLeft + anchor.offsetWidth - container.offsetWidth * 0.031) + "px";
+    el.addEventListener("pointerdown", e => { e.stopPropagation(); onPress(n.id, el); });
+    container.appendChild(el);
+  });
+}
+
+const screens = document.querySelectorAll(".screen");
+function show(name) {
+  screens.forEach(s => s.classList.remove("active"));
+  document.getElementById("screen-" + name).classList.add("active");
+  if (name === "find") newFindRound();
+  if (name === "reverse") newReverseRound();
+}
+document.querySelectorAll("[data-go]").forEach(btn =>
+  btn.addEventListener("click", () => show(btn.dataset.go)));
+
+function flash(text, color) {
+  const f = document.getElementById("feedback");
+  f.textContent = text;
+  f.style.color = color;
+  f.classList.remove("show");
+  void f.offsetWidth;
+  f.classList.add("show");
+}
+function confetti() {
+  const colors = ["#ff6f91", "#ffd54f", "#66bb6a", "#42a5f5", "#ab47bc"];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = (45 + Math.random() * 10) + "vw";
+    c.style.top = "30vh";
+    c.style.background = colors[i % colors.length];
+    c.style.animation = `fall ${1 + Math.random()}s ease-in forwards`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 2200);
+  }
+}
+
+function showNoteInfo(id) {
+  const n = byId[id];
+  if (n.y !== null) drawStaff(document.getElementById("staff-learn"), { note: n, highlight: true });
+}
+
+const learnSvg = document.getElementById("staff-learn");
+drawStaff(learnSvg);
+buildPiano(document.getElementById("piano-learn"), id => {
+  const n = byId[id];
+  playNote(n.freq);
+  showNoteInfo(id);
+});
+
+let findTarget = null, findCount = 0, findLocked = false;
+function newFindRound() {
+  findCount++;
+  document.getElementById("find-round").textContent = `Задание ${findCount} из 10`;
+  const whites = WHITE.filter(n => n.id !== "C4");
+  findTarget = whites[Math.floor(Math.random() * whites.length)];
+  findLocked = false;
+  drawStaff(document.getElementById("staff-find"), { note: findTarget, highlight: false });
+}
+buildPiano(document.getElementById("piano-find"), id => {
+  if (findLocked) return;
+  const n = byId[id];
+  playNote(n.freq);
+  if (id === findTarget.id) {
+    findLocked = true;
+    playCorrect();
+    flash("Молодец! ⭐", "#66bb6a");
+    confetti();
+    addStars(1);
+    drawStaff(document.getElementById("staff-find"), { note: findTarget, highlight: true });
+    setTimeout(() => findCount >= 10 ? (flash("Игра пройдена! 🏆", "#ffa726"), findCount = 0, setTimeout(newFindRound, 1800)) : newFindRound(), 1500);
+  } else {
+    playWrong();
+    flash("Попробуй ещё! 💪", "#ef5350");
+  }
+});
+
+let revTarget = null, revCount = 0, revLocked = false;
+function newReverseRound() {
+  revCount++;
+  document.getElementById("rev-round").textContent = `Задание ${revCount} из 10`;
+  revTarget = WHITE[Math.floor(Math.random() * WHITE.length)];
+  const others = WHITE.filter(n => n.id !== revTarget.id && Math.abs(n.y - revTarget.y) > 20);
+  const wrong = [];
+  while (wrong.length < 2 && others.length) {
+    const i = Math.floor(Math.random() * others.length);
+    wrong.push(others.splice(i, 1)[0]);
+  }
+  revLocked = false;
+  const options = [revTarget, ...wrong].sort(() => Math.random() - 0.5);
+  drawStaff(document.getElementById("staff-rev"));
+  const box = document.getElementById("rev-answers");
+  box.innerHTML = "";
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "answer";
+    const svg = document.createElementNS(SVGNS, "svg");
+    svg.setAttribute("width", 170); svg.setAttribute("height", 150);
+    svg.setAttribute("viewBox", "-60 -45 290 150");
+    drawStaff(svg, { note: opt, small: true });
+    btn.appendChild(svg);
+    btn.addEventListener("click", () => {
+      if (revLocked) return;
+      playNote(byId[revTarget.id].freq);
+      if (opt.id === revTarget.id) {
+        revLocked = true;
+        btn.classList.add("correct");
+        playCorrect();
+        flash("Верно! ⭐", "#66bb6a");
+        confetti();
+        addStars(1);
+        drawStaff(document.getElementById("staff-rev"), { note: revTarget, highlight: true });
+        setTimeout(() => revCount >= 10 ? (flash("Игра пройдена! 🏆", "#ffa726"), revCount = 0, setTimeout(newReverseRound, 1800)) : newReverseRound(), 1500);
+      } else {
+        btn.classList.add("wrong");
+        playWrong();
+        flash("Не та нота, попробуй ещё! 💪", "#ef5350");
+        setTimeout(() => btn.classList.remove("wrong"), 700);
+      }
+    });
+    box.appendChild(btn);
+  });
+  const key = document.querySelector("#piano-rev .white-key[data-note='" + revTarget.id + "']");
+  if (key) key.classList.add("glow");
+}
+buildPiano(document.getElementById("piano-rev"), id => {
+  const n = byId[id];
+  playNote(n.freq);
+});
+
+window.addEventListener("keydown", e => {
+  const map = { a: "C4", s: "D4", d: "E4", f: "F4", g: "G4", h: "A4", j: "B4", k: "C5", l: "D5" };
+  const id = map[e.key.toLowerCase()];
+  if (id) {
+    const key = document.querySelector(".screen.active .white-key[data-note='" + id + "']");
+    if (key) key.dispatchEvent(new PointerEvent("pointerdown"));
+  }
+});
+</script>
+</body>
+</html>
