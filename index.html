@@ -10,7 +10,8 @@
   body {
     font-family: "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
     background: linear-gradient(180deg, #7ec8f7 0%, #b3e5fc 45%, #d3f5d3 100%);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
   }
@@ -124,8 +125,15 @@
     padding: 6px 12px; box-shadow: 0 4px 0 rgba(0,0,0,.1); transition: border-color .15s;
   }
   .answer:hover { border-color: #ffa726; }
-  .answer.correct { border-color: #66bb6a; background: #e8f5e9; }
-  .answer.wrong { border-color: #ef5350; background: #ffebee; }
+  .answer svg { width: clamp(96px, 26vw, 170px); height: auto; }
+
+  @media (max-height: 760px) {
+    .staff-wrap svg { width: min(300px, 78vw); height: auto; }
+    .piano { height: clamp(110px, 20vh, 180px); }
+    .answers { gap: 8px; }
+    .answer { padding: 3px 8px; }
+    .hint { padding: 5px 14px; font-size: clamp(15px, 2.6vw, 20px); }
+  }
 </style>
 </head>
 <body>
